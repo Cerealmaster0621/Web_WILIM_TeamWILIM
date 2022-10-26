@@ -42,6 +42,13 @@ module.exports.deleteUserById = async(req,res,next)=>{
     try{
         const {id} = req.params;
         const user = await User.findById(id); //유저정보 반환
+        const likedPosts = user.likedPosts.values();
+        for (const post of likedPosts){
+            post.likes -= 1;
+            post.likedUsers.filter(u => u != user);
+            console.log("post id : "+post._id+", liked users : "+post.likedUsers);
+            await post.save();
+        }
         await Comment.deleteMany({owner:id});//유저가 올린 댓글 삭제
         await Post.deleteMany({owner:id});//유저가 올린 게시글 삭제
         await GoalElement.findByIdAndUpdate(user.goal, {$pull:{users : id}})//ctfInfo 에서 이 자격증을 선택한 유저 뽑아내기
